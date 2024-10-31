@@ -1,0 +1,35 @@
+java/target/
+java/!.mvn/wrapper/maven-wrapper.jar
+java/!**/src/main/**/target/
+java/!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+java/.idea
+java/*.iws
+java/*.iml
+java/*.ipr
+
+### Eclipse ###
+java/.apt_generated
+java/.classpath
+java/.factorypath
+java/.project
+java/.settings
+java/.springBeans
+java/.sts4-cache
+
+### NetBeans ###
+java/nbproject/private/
+java/nbbuild/
+java/dist/
+java/nbdist/
+java/.nb-gradle/
+java/build/
+java/!**/src/main/**/build/
+java/!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
