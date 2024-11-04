@@ -8,6 +8,8 @@ java/.idea
 java/*.iws
 java/*.iml
 java/*.ipr
+python/.idea
+python/venv
 
 ### Eclipse ###
 java/.apt_generated
