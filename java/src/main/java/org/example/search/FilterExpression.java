@@ -96,16 +96,16 @@ public class FilterExpression {
 
         Gson gson = new Gson();
         List<JsonObject> data = Arrays.asList(
-                gson.fromJson("{\"id\": 0, \"color\": \"pink_8682\", \"price\": 593, \"inventory\": {\"brand\": \"Sony\", \"quantity\": 310, \"previous_sales\": [451, 348, 224]}, \"sales_volume\": [161, 81, 51]}", JsonObject.class),
-                gson.fromJson("{\"id\": 1, \"color\": \"red_7025\", \"price\": 196, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 274, \"previous_sales\": [315, 133, 109]}, \"sales_volume\": [126, 126, 125, 96, 155]}", JsonObject.class),
-                gson.fromJson("{\"id\": 2, \"color\": \"orange_6781\", \"price\": 862, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 103, \"previous_sales\": [232, 254, 275]}, \"sales_volume\": [124, 117, 90, 188]}", JsonObject.class),
-                gson.fromJson("{\"id\": 3, \"color\": \"pink_9298\", \"price\": 991, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 175, \"previous_sales\": [288, 169, 112]}, \"sales_volume\": [133, 92, 181, 61, 193]}", JsonObject.class),
-                gson.fromJson("{\"id\": 4, \"color\": \"red_4794\", \"price\": 327, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 193, \"previous_sales\": [225, 286, 202]}, \"sales_volume\": [155, 161, 106, 86, 99]}", JsonObject.class),
-                gson.fromJson("{\"id\": 5, \"color\": \"yellow_4222\", \"price\": 996, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 376, \"previous_sales\": [254, 275, 232]}, \"sales_volume\": [173, 151, 148]}", JsonObject.class),
-                gson.fromJson("{\"id\": 6, \"color\": \"red_9392\", \"price\": 848, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 61, \"previous_sales\": [312, 254, 367]}, \"sales_volume\": [59, 156, 126, 60, 177]}", JsonObject.class),
-                gson.fromJson("{\"id\": 7, \"color\": \"grey_8510\", \"price\": 241, \"inventory\": {\"brand\": \"Dell\", \"quantity\": 248, \"previous_sales\": [318, 238, 127]}, \"sales_volume\": [105, 126, 114, 132]}", JsonObject.class),
-                gson.fromJson("{\"id\": 8, \"color\": \"white_9381\", \"price\": 597, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 351, \"previous_sales\": [482, 105, 130]}, \"sales_volume\": [150, 150, 73]}", JsonObject.class),
-                gson.fromJson("{\"id\": 9, \"color\": \"purple_4976\", \"price\": 450, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 268, \"previous_sales\": [456, 271, 479]}, \"sales_volume\": [190, 149, 85, 79, 80]}", JsonObject.class)
+                gson.fromJson("{\"id\": 1, \"color\": \"pink_8682\", \"price\": 593, \"inventory\": {\"brand\": \"Sony\", \"quantity\": 310, \"previous_sales\": [451, 348, 224]}, \"sales_volume\": [161, 81, 51]}", JsonObject.class),
+                gson.fromJson("{\"id\": 2, \"color\": \"red_7025\", \"price\": 196, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 274, \"previous_sales\": [315, 133, 109]}, \"sales_volume\": [126, 126, 125, 96, 155]}", JsonObject.class),
+                gson.fromJson("{\"id\": 3, \"color\": \"orange_6781\", \"price\": 862, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 103, \"previous_sales\": [232, 254, 275]}, \"sales_volume\": [124, 117, 90, 188]}", JsonObject.class),
+                gson.fromJson("{\"id\": 4, \"color\": \"pink_9298\", \"price\": 991, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 175, \"previous_sales\": [288, 169, 112]}, \"sales_volume\": [133, 92, 181, 61, 193]}", JsonObject.class),
+                gson.fromJson("{\"id\": 5, \"color\": \"red_4794\", \"price\": 327, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 193, \"previous_sales\": [225, 286, 202]}, \"sales_volume\": [155, 161, 106, 86, 99]}", JsonObject.class),
+                gson.fromJson("{\"id\": 6, \"color\": \"yellow_4222\", \"price\": 996, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 376, \"previous_sales\": [254, 275, 232]}, \"sales_volume\": [173, 151, 148]}", JsonObject.class),
+                gson.fromJson("{\"id\": 7, \"color\": \"red_9392\", \"price\": 848, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 61, \"previous_sales\": [312, 254, 367]}, \"sales_volume\": [59, 156, 126, 60, 177]}", JsonObject.class),
+                gson.fromJson("{\"id\": 8, \"color\": \"grey_8510\", \"price\": 241, \"inventory\": {\"brand\": \"Dell\", \"quantity\": 248, \"previous_sales\": [318, 238, 127]}, \"sales_volume\": [105, 126, 114, 132]}", JsonObject.class),
+                gson.fromJson("{\"id\": 9, \"color\": \"white_9381\", \"price\": 597, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 351, \"previous_sales\": [482, 105, 130]}, \"sales_volume\": [150, 150, 73]}", JsonObject.class),
+                gson.fromJson("{\"id\": 10, \"color\": \"purple_4976\", \"price\": 450, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 268, \"previous_sales\": [456, 271, 479]}, \"sales_volume\": [190, 149, 85, 79, 80]}", JsonObject.class)
         );
 
         for (JsonObject row : data) {
@@ -258,7 +258,7 @@ public class FilterExpression {
         QueryReq queryReq = QueryReq.builder()
                 .collectionName("my_collection")
                 .filter("sales_volume[0]*2 > 300")
-                .outputFields(Arrays.asList("id", "color", "price", "inventory"))
+                .outputFields(Arrays.asList("id", "color", "price", "sales_volume"))
                 .build();
 
         QueryResp getResp = client.query(queryReq);

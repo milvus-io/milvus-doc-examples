@@ -104,11 +104,22 @@ public class Nullable {
         System.out.println(resp.getSearchResults());
     }
 
-    private static void queryNull() {
+    private static void queryWithoutNull() {
         QueryResp resp = client.query(QueryReq.builder()
                 .collectionName("user_profiles_null")
                 .filter("age >= 0")
                 .outputFields(Arrays.asList("id", "age"))
+                .build());
+
+        System.out.println(resp.getQueryResults());
+    }
+
+    private static void queryIncludeNull() {
+        QueryResp resp = client.query(QueryReq.builder()
+                .collectionName("user_profiles_null")
+                .filter("")
+                .outputFields(Arrays.asList("id", "age"))
+                .limit(10)
                 .build());
 
         System.out.println(resp.getQueryResults());
@@ -215,7 +226,8 @@ public class Nullable {
         createCollectionForNull();
         insertNull();
         searchNull();
-        queryNull();
+        queryWithoutNull();
+        queryIncludeNull();
 
         dropCollection();
         createCollectionForDefault();
