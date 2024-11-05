@@ -8,7 +8,7 @@ import io.milvus.v2.service.vector.response.DeleteResp;
 import java.util.Arrays;
 
 
-public class DeleteEntities {
+public class DeleteEntity {
     private static void deleteByExpr() {
         MilvusClientV2 client = new MilvusClientV2(ConnectConfig.builder()
                 .uri("http://localhost:19530")

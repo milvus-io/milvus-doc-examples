@@ -19,7 +19,7 @@ import io.milvus.v2.service.vector.response.SearchResp;
 
 import java.util.*;
 
-public class Nullable {
+public class NullDefault {
     private static final MilvusClientV2 client;
     static {
         client = new MilvusClientV2(ConnectConfig.builder()

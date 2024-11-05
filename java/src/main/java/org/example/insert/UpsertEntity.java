@@ -9,7 +9,7 @@ import io.milvus.v2.service.vector.response.UpsertResp;
 
 import java.util.*;
 
-public class UpsertEntities {
+public class UpsertEntity {
     private static void upsertToCollection() {
         MilvusClientV2 client = new MilvusClientV2(ConnectConfig.builder()
                 .uri("http://localhost:19530")

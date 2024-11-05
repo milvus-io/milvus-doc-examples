@@ -1,5 +1,7 @@
 package org.example.collection;
 
+import io.milvus.param.Constant;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
@@ -96,20 +98,40 @@ public class CreateCollection {
         loaded = client.getLoadState(customSetupLoadStateReq2);
         System.out.println(loaded);
 
+        // With shard number
         CreateCollectionReq customizedSetupReq3 = CreateCollectionReq.builder()
-                .collectionName("customized_setup_2")
+                .collectionName("customized_setup_3")
                 .collectionSchema(schema)
                 // highlight-next-line
                 .numShards(1)
                 .build();
         client.createCollection(customizedSetupReq3);
 
+        // With MMap
         CreateCollectionReq customizedSetupReq4 = CreateCollectionReq.builder()
                 .collectionName("customized_setup_4")
                 .collectionSchema(schema)
                 // highlight-next-line
-                .numShards(1)
+                .property(Constant.MMAP_ENABLED, "false")
                 .build();
         client.createCollection(customizedSetupReq4);
+
+        // With TTL
+        CreateCollectionReq customizedSetupReq5 = CreateCollectionReq.builder()
+                .collectionName("customized_setup_5")
+                .collectionSchema(schema)
+                // highlight-next-line
+                .property(Constant.TTL_SECONDS, "86400")
+                .build();
+        client.createCollection(customizedSetupReq5);
+
+        // With consistency level
+        CreateCollectionReq customizedSetupReq6 = CreateCollectionReq.builder()
+                .collectionName("customized_setup_6")
+                .collectionSchema(schema)
+                // highlight-next-line
+                .consistencyLevel(ConsistencyLevel.BOUNDED)
+                .build();
+        client.createCollection(customizedSetupReq6);
     }
 }
