@@ -61,7 +61,6 @@ public class LoadRelease {
 
         client.releaseCollection(releaseCollectionReq);
 
-        // 9. Get load state of the collection
         GetLoadStateReq loadStateReq = GetLoadStateReq.builder()
                 .collectionName("customized_setup_1")
                 .build();

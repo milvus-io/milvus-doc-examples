@@ -9,7 +9,7 @@ import io.milvus.v2.service.vector.response.InsertResp;
 
 import java.util.*;
 
-public class InsertEntities {
+public class InsertEntity {
     private static void insertToCollection() {
         MilvusClientV2 client = new MilvusClientV2(ConnectConfig.builder()
                 .uri("http://localhost:19530")

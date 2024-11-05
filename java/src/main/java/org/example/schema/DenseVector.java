@@ -2,6 +2,7 @@ package org.example.schema;
 
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.AddFieldReq;
@@ -9,6 +10,7 @@ import io.milvus.v2.service.collection.request.CreateCollectionReq;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.milvus.v2.service.collection.request.DropCollectionReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
 import io.milvus.v2.service.vector.request.data.FloatVec;
@@ -17,7 +19,7 @@ import io.milvus.v2.service.vector.response.SearchResp;
 
 import java.util.*;
 
-public class FloatVector {
+public class DenseVector {
     private static final MilvusClientV2 client;
     static {
         client = new MilvusClientV2(ConnectConfig.builder()
@@ -26,6 +28,10 @@ public class FloatVector {
     }
 
     private static void createCollection() {
+        client.dropCollection(DropCollectionReq.builder()
+                .collectionName("my_dense_collection")
+                .build());
+
         CreateCollectionReq.CollectionSchema schema = client.createSchema();
         schema.setEnableDynamicField(true);
         schema.addField(AddFieldReq.builder()

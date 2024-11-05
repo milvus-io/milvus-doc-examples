@@ -121,7 +121,7 @@ public class GroupingSearch {
         SearchReq searchReq = SearchReq.builder()
                 .collectionName("group_search_collection")
                 .data(Collections.singletonList(queryVector))
-                .topK(3)
+                .topK(5)
                 .groupByFieldName("docId")
                 .groupSize(2)
                 .groupStrictSize(true)
