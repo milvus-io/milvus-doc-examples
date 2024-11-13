@@ -124,7 +124,7 @@ public class GroupingSearch {
                 .topK(3)
                 .groupByFieldName("docId")
                 .groupSize(2)
-                .groupStrictSize(true)
+                .strictGroupSize(true)
                 .outputFields(Collections.singletonList("docId"))
                 .build();
 

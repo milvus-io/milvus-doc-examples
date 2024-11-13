@@ -70,8 +70,29 @@ def grouping_search():
         for hit in hits:
             print(hit)
 
+def group_size_search():
+    query_vectors = [
+        [0.14529211512077012, 0.9147257273453546, 0.7965055218724449, 0.7009258593102812,
+         0.5605206522382088]]
+
+    res = client.search(
+        collection_name="group_search_collection",
+        data=query_vectors,
+        limit=5,
+        group_by_field="docId",
+        group_size=2,
+        strict_group_size=True,
+        output_fields=["docId"]
+    )
+
+    for hits in res:
+        print("TopK results:")
+        for hit in hits:
+            print(hit)
 
 if __name__ == "__main__":
     create_collection()
     print("================ grouping_search ================")
     grouping_search()
+    print("================ group_size_search ================")
+    group_size_search()
