@@ -171,6 +171,15 @@ def text_match_query():
     for result in results:
         print(result)
 
+def text_match_query_and():
+    results = client.query(
+        collection_name="my_collection",
+        filter='TEXT_MATCH(description, "chip") and TEXT_MATCH(description, "iPhone")',
+        output_fields=["id", "description"],
+    )
+    for result in results:
+        print(result)
+
 def math_json_query():
     results = client.query(
         collection_name="my_collection",
@@ -285,6 +294,8 @@ if __name__ == "__main__":
     math_array_query();
     print("================ text_match_query ================")
     text_match_query();
+    print("================ text_match_query_and ================")
+    text_match_query_and();
     print("================ json_contains ================")
     json_contains();
     print("================ json_contains_all ================")
