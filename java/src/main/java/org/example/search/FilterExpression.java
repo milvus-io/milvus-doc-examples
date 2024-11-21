@@ -83,6 +83,14 @@ public class FilterExpression {
                 .metricType(IndexParam.MetricType.COSINE)
                 .build();
 
+        schema.addField(AddFieldReq.builder()
+                .fieldName("description")
+                .dataType(DataType.VarChar)
+                .maxLength(65535)
+                .enableAnalyzer(true)
+                .enableMatch(true)
+                .build());
+
         List<IndexParam> indexParams = new ArrayList<>();
         indexParams.add(indexParamForVectorField);
 
@@ -96,16 +104,16 @@ public class FilterExpression {
 
         Gson gson = new Gson();
         List<JsonObject> data = Arrays.asList(
-                gson.fromJson("{\"id\": 1, \"color\": \"pink_8682\", \"price\": 593, \"inventory\": {\"brand\": \"Sony\", \"quantity\": 310, \"previous_sales\": [451, 348, 224]}, \"sales_volume\": [161, 81, 51]}", JsonObject.class),
-                gson.fromJson("{\"id\": 2, \"color\": \"red_7025\", \"price\": 196, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 274, \"previous_sales\": [315, 133, 109]}, \"sales_volume\": [126, 126, 125, 96, 155]}", JsonObject.class),
-                gson.fromJson("{\"id\": 3, \"color\": \"orange_6781\", \"price\": 862, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 103, \"previous_sales\": [232, 254, 275]}, \"sales_volume\": [124, 117, 90, 188]}", JsonObject.class),
-                gson.fromJson("{\"id\": 4, \"color\": \"pink_9298\", \"price\": 991, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 175, \"previous_sales\": [288, 169, 112]}, \"sales_volume\": [133, 92, 181, 61, 193]}", JsonObject.class),
-                gson.fromJson("{\"id\": 5, \"color\": \"red_4794\", \"price\": 327, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 193, \"previous_sales\": [225, 286, 202]}, \"sales_volume\": [155, 161, 106, 86, 99]}", JsonObject.class),
-                gson.fromJson("{\"id\": 6, \"color\": \"yellow_4222\", \"price\": 996, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 376, \"previous_sales\": [254, 275, 232]}, \"sales_volume\": [173, 151, 148]}", JsonObject.class),
-                gson.fromJson("{\"id\": 7, \"color\": \"red_9392\", \"price\": 848, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 61, \"previous_sales\": [312, 254, 367]}, \"sales_volume\": [59, 156, 126, 60, 177]}", JsonObject.class),
-                gson.fromJson("{\"id\": 8, \"color\": \"grey_8510\", \"price\": 241, \"inventory\": {\"brand\": \"Dell\", \"quantity\": 248, \"previous_sales\": [318, 238, 127]}, \"sales_volume\": [105, 126, 114, 132]}", JsonObject.class),
-                gson.fromJson("{\"id\": 9, \"color\": \"white_9381\", \"price\": 597, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 351, \"previous_sales\": [482, 105, 130]}, \"sales_volume\": [150, 150, 73]}", JsonObject.class),
-                gson.fromJson("{\"id\": 10, \"color\": \"purple_4976\", \"price\": 450, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 268, \"previous_sales\": [456, 271, 479]}, \"sales_volume\": [190, 149, 85, 79, 80]}", JsonObject.class)
+                gson.fromJson("{\"id\": 1, \"color\": \"pink_8682\", \"price\": 593, \"inventory\": {\"brand\": \"Sony\", \"quantity\": 310, \"previous_sales\": [451, 348, 224]}, \"sales_volume\": [161, 81, 51], \"description\": \"Sony Xperia 1 VI is a flagship Android smartphone released in 2024 with a 6.5-inch LTPO OLED display\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 2, \"color\": \"red_7025\", \"price\": 196, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 274, \"previous_sales\": [315, 133, 109]}, \"sales_volume\": [126, 126, 125, 96, 155], \"description\": \"Galaxy S24 Ultra, Samsung’s latest flagship smartphone.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 3, \"color\": \"orange_6781\", \"price\": 862, \"inventory\": {\"brand\": \"Samsung\", \"quantity\": 103, \"previous_sales\": [232, 254, 275]}, \"sales_volume\": [124, 117, 90, 188], \"description\": \"Galaxy Fold features the world’s first 7.3-inch Infinity Flex Display.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 4, \"color\": \"pink_9298\", \"price\": 991, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 175, \"previous_sales\": [288, 169, 112]}, \"sales_volume\": [133, 92, 181, 61, 193], \"description\": \"Surface Duo 2, now with lightning-fast 5G(Footnote1) and dynamic triple lens camera.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 5, \"color\": \"red_4794\", \"price\": 327, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 193, \"previous_sales\": [225, 286, 202]}, \"sales_volume\": [155, 161, 106, 86, 99], \"description\": \"iPhone 15 Pro, A new chip designed for better gaming and other 'pro' features.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 6, \"color\": \"yellow_4222\", \"price\": 996, \"inventory\": {\"brand\": \"Microsoft\", \"quantity\": 376, \"previous_sales\": [254, 275, 232]}, \"sales_volume\": [173, 151, 148], \"description\": \"The Microsoft Surface Duo seems at first like the perfect little device for this new work-from-home world.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 7, \"color\": \"red_9392\", \"price\": 848, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 61, \"previous_sales\": [312, 254, 367]}, \"sales_volume\": [59, 156, 126, 60, 177], \"description\": \"The iPhone 14 is a smartphone from Apple Inc. that comes in various colors and sizes.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 8, \"color\": \"grey_8510\", \"price\": 241, \"inventory\": {\"brand\": \"Dell\", \"quantity\": 248, \"previous_sales\": [318, 238, 127]}, \"sales_volume\": [105, 126, 114, 132], \"description\": \"The Dell Inspiron 15 3000 laptop is equipped with a powerful Intel Core i5-1135G7 Quad-Core Processor, 12GB RAM and 256GB SSD storage.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 9, \"color\": \"white_9381\", \"price\": 597, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 351, \"previous_sales\": [482, 105, 130]}, \"sales_volume\": [150, 150, 73], \"description\": \"The iPhone 16 features a 6.1-inch OLED display, is powered by Apple's A18 processor, and has dual cameras at the back.\"}", JsonObject.class),
+                gson.fromJson("{\"id\": 10, \"color\": \"purple_4976\", \"price\": 450, \"inventory\": {\"brand\": \"Apple\", \"quantity\": 268, \"previous_sales\": [456, 271, 479]}, \"sales_volume\": [190, 149, 85, 79, 80], \"description\": \"The iPad is a brand of iOS- and iPadOS-based tablet computers that are developed and marketed by Apple.\"}", JsonObject.class)
         );
 
         for (JsonObject row : data) {
@@ -224,6 +232,22 @@ public class FilterExpression {
             System.out.println(result.getEntity());
         }
     }
+
+    private static void textMatchQuery() {
+        QueryReq queryReq = QueryReq.builder()
+                .collectionName("my_collection")
+                .filter("TEXT_MATCH(description, \"Apple iPhone\")")
+                .outputFields(Arrays.asList("id", "description"))
+                .build();
+
+        QueryResp getResp = client.query(queryReq);
+
+        List<QueryResp.QueryResult> results = getResp.getQueryResults();
+        for (QueryResp.QueryResult result : results) {
+            System.out.println(result.getEntity());
+        }
+    }
+
     private static void mathScalarQuery() {
         QueryReq queryReq = QueryReq.builder()
                 .collectionName("my_collection")
@@ -408,6 +432,8 @@ public class FilterExpression {
         matchJsonQuery();
         System.out.println("===== mathScalarQuery =====");
         mathScalarQuery();
+        System.out.println("===== textMatchQuery =====");
+        textMatchQuery();
         System.out.println("===== mathJsonQuery =====");
         mathJsonQuery();
         System.out.println("===== mathArrayQuery =====");
