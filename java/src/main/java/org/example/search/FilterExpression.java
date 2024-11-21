@@ -248,6 +248,21 @@ public class FilterExpression {
         }
     }
 
+    private static void textMatchQueryAnd() {
+        QueryReq queryReq = QueryReq.builder()
+                .collectionName("my_collection")
+                .filter("TEXT_MATCH(description, \"chip\") and TEXT_MATCH(description, \"iPhone\")")
+                .outputFields(Arrays.asList("id", "description"))
+                .build();
+
+        QueryResp getResp = client.query(queryReq);
+
+        List<QueryResp.QueryResult> results = getResp.getQueryResults();
+        for (QueryResp.QueryResult result : results) {
+            System.out.println(result.getEntity());
+        }
+    }
+
     private static void mathScalarQuery() {
         QueryReq queryReq = QueryReq.builder()
                 .collectionName("my_collection")
@@ -434,6 +449,8 @@ public class FilterExpression {
         mathScalarQuery();
         System.out.println("===== textMatchQuery =====");
         textMatchQuery();
+        System.out.println("===== textMatchQueryAnd =====");
+        textMatchQueryAnd();
         System.out.println("===== mathJsonQuery =====");
         mathJsonQuery();
         System.out.println("===== mathArrayQuery =====");
