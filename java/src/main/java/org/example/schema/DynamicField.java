@@ -5,7 +5,10 @@ import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
 import io.milvus.v2.common.ConsistencyLevel;
+import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
+import io.milvus.v2.service.collection.request.DropCollectionReq;
+import io.milvus.v2.service.index.request.CreateIndexReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
 import io.milvus.v2.service.vector.request.data.FloatVec;
@@ -24,6 +27,9 @@ public class DynamicField {
     }
 
     private static void createCollection() {
+        client.dropCollection(DropCollectionReq.builder()
+                .collectionName("my_dynamic_collection")
+                .build());
         CreateCollectionReq createCollectionReq = CreateCollectionReq.builder()
                 .collectionName("my_dynamic_collection")
                 .dimension(5)
@@ -57,6 +63,25 @@ public class DynamicField {
         System.out.println(insertResp);
     }
 
+    private static void createIndex() {
+        List<IndexParam> indexes = new ArrayList<>();
+
+        Map<String,Object> extraParams = new HashMap<>();
+        extraParams.put("json_path", "color");
+        extraParams.put("json_cast_type", "varchar");
+        indexes.add(IndexParam.builder()
+                .fieldName("color")
+                .indexName("color_index")
+                .indexType(IndexParam.IndexType.INVERTED)
+                .extraParams(extraParams)
+                .build());
+
+        client.createIndex(CreateIndexReq.builder()
+                .collectionName("my_dynamic_collection")
+                .indexParams(indexes)
+                .build());
+    }
+
     private static void search() {
         FloatVec queryVector = new FloatVec(new float[]{0.3580376395471989f, -0.6023495712049978f, 0.18414012509913835f, -0.26286205330961354f, 0.9029438446296592f});
         SearchResp resp = client.search(SearchReq.builder()
@@ -75,6 +100,7 @@ public class DynamicField {
     public static void main(String[] args) {
         createCollection();
         insert();
+        createIndex();
         search();
     }
 }

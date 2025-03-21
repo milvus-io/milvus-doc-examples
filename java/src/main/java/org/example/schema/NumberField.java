@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
-import io.milvus.v2.service.collection.request.AddFieldReq;
-import io.milvus.v2.service.collection.request.CreateCollectionReq;
+import io.milvus.v2.service.collection.request.*;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.QueryReq;
 import io.milvus.v2.service.vector.request.SearchReq;
@@ -18,7 +18,7 @@ import io.milvus.v2.service.vector.response.SearchResp;
 
 import java.util.*;
 
-public class ArrayField {
+public class NumberField {
     private static final MilvusClientV2 client;
     static {
         client = new MilvusClientV2(ConnectConfig.builder()
@@ -26,24 +26,20 @@ public class ArrayField {
                 .build());
     }
 
-    private static CreateCollectionReq.CollectionSchema createSchema() {
+    private static void createCollection() {
         CreateCollectionReq.CollectionSchema schema = client.createSchema();
         schema.setEnableDynamicField(true);
 
         schema.addField(AddFieldReq.builder()
-                .fieldName("tags")
-                .dataType(DataType.Array)
-                .elementType(DataType.VarChar)
-                .maxCapacity(10)
-                .maxLength(65535)
+                .fieldName("age")
+                .dataType(DataType.Int64)
                 .isNullable(true)
+                .defaultValue(18)
                 .build());
 
         schema.addField(AddFieldReq.builder()
-                .fieldName("ratings")
-                .dataType(DataType.Array)
-                .elementType(DataType.Int64)
-                .maxCapacity(5)
+                .fieldName("price")
+                .dataType(DataType.Float)
                 .isNullable(true)
                 .build());
 
@@ -59,14 +55,9 @@ public class ArrayField {
                 .dimension(3)
                 .build());
 
-        return schema;
-    }
-
-    private static List<IndexParam> createIndex() {
         List<IndexParam> indexes = new ArrayList<>();
         indexes.add(IndexParam.builder()
-                .fieldName("tags")
-                .indexName("inverted_index")
+                .fieldName("age")
                 .indexType(IndexParam.IndexType.AUTOINDEX)
                 .build());
 
@@ -76,27 +67,27 @@ public class ArrayField {
                 .metricType(IndexParam.MetricType.COSINE)
                 .build());
 
-        return indexes;
-    }
-
-    private static void createCollection(CreateCollectionReq.CollectionSchema schema, List<IndexParam> indexes) {
+        client.dropCollection(DropCollectionReq.builder().collectionName("my_scalar_collection").build());
         CreateCollectionReq requestCreate = CreateCollectionReq.builder()
-                .collectionName("my_array_collection")
+                .collectionName("my_scalar_collection")
                 .collectionSchema(schema)
                 .indexParams(indexes)
                 .build();
         client.createCollection(requestCreate);
     }
 
-    private static void insert() {
+    private static void insertData() {
         List<JsonObject> rows = new ArrayList<>();
         Gson gson = new Gson();
-        rows.add(gson.fromJson("{\"tags\": [\"pop\", \"rock\", \"classic\"], \"ratings\": [5, 4, 3], \"pk\": 1, \"embedding\": [0.12, 0.34, 0.56]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"tags\": null, \"ratings\": [4, 5], \"pk\": 2, \"embedding\": [0.78, 0.91, 0.23]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"ratings\": [9, 5], \"pk\": 3, \"embedding\": [0.18, 0.11, 0.23]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": 25, \"price\": 99.99, \"pk\": 1, \"embedding\": [0.1, 0.2, 0.3]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": 30, \"pk\": 2, \"embedding\": [0.4, 0.5, 0.6]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": null, \"price\": null, \"pk\": 3, \"embedding\": [0.2, 0.3, 0.1]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": 45, \"price\": null, \"pk\": 4, \"embedding\": [0.9, 0.1, 0.4]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": null, \"price\": 59.99, \"pk\": 5, \"embedding\": [0.8, 0.5, 0.3]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"age\": 60, \"price\": null, \"pk\": 6, \"embedding\": [0.1, 0.6, 0.9]}", JsonObject.class));
 
         InsertResp insertR = client.insert(InsertReq.builder()
-                .collectionName("my_array_collection")
+                .collectionName("my_scalar_collection")
                 .data(rows)
                 .build());
     }
@@ -104,22 +95,22 @@ public class ArrayField {
     private static void query(String filter) {
         System.out.println(String.format("======= Query with filter: '%s' =======", filter));
         QueryResp resp = client.query(QueryReq.builder()
-                .collectionName("my_array_collection")
+                .collectionName("my_scalar_collection")
                 .filter(filter)
-                .outputFields(Arrays.asList("tags", "ratings", "pk"))
+                .outputFields(Arrays.asList("age", "price"))
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
-
         System.out.println(resp.getQueryResults());
     }
 
     private static void search(String filter) {
         System.out.println(String.format("======= Search with filter: '%s' =======", filter));
         SearchResp resp = client.search(SearchReq.builder()
-                .collectionName("my_array_collection")
+                .collectionName("my_scalar_collection")
                 .annsField("embedding")
                 .data(Collections.singletonList(new FloatVec(new float[]{0.3f, -0.6f, 0.1f})))
                 .topK(5)
-                .outputFields(Arrays.asList("tags", "ratings", "embedding"))
+                .outputFields(Arrays.asList("age", "price"))
                 .filter(filter)
                 .build());
 
@@ -127,12 +118,11 @@ public class ArrayField {
     }
 
     public static void main(String[] args) {
-        CreateCollectionReq.CollectionSchema schema = createSchema();
-        List<IndexParam> indexes = createIndex();
-        createCollection(schema, indexes);
-        insert();
-        query("tags IS NOT NULL");
-        query("ratings[0] > 4");
-        search("tags[0] == \"pop\"");
+        createCollection();
+        insertData();
+        query("age > 30");
+        query("price is null");
+        query("age == 18");
+        search("25 <= age <= 35");
     }
 }

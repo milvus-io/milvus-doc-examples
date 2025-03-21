@@ -1,4 +1,4 @@
-package org.example.mmap;
+package org.example.storage;
 
 import io.milvus.param.Constant;
 import io.milvus.v2.client.ConnectConfig;
@@ -7,8 +7,6 @@ import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.*;
 import io.milvus.v2.service.index.request.AlterIndexPropertiesReq;
-import io.milvus.v2.service.index.request.DescribeIndexReq;
-import io.milvus.v2.service.index.response.DescribeIndexResp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
