@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.AddFieldReq;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
+import io.milvus.v2.service.collection.request.DropCollectionReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.QueryReq;
 import io.milvus.v2.service.vector.request.SearchReq;
@@ -33,6 +35,7 @@ public class JsonField {
         schema.addField(AddFieldReq.builder()
                 .fieldName("metadata")
                 .dataType(DataType.JSON)
+                .isNullable(true)
                 .build());
 
         schema.addField(AddFieldReq.builder()
@@ -52,6 +55,27 @@ public class JsonField {
 
     private static List<IndexParam> createIndex() {
         List<IndexParam> indexes = new ArrayList<>();
+
+        Map<String,Object> extraParams_1 = new HashMap<>();
+        extraParams_1.put("json_path", "metadata[\"product_info\"][\"category\"]");
+        extraParams_1.put("json_cast_type", "varchar");
+        indexes.add(IndexParam.builder()
+                .fieldName("metadata")
+                .indexName("json_index_1")
+                .indexType(IndexParam.IndexType.INVERTED)
+                .extraParams(extraParams_1)
+                .build());
+
+        Map<String,Object> extraParams_2 = new HashMap<>();
+        extraParams_2.put("json_path", "metadata[\"price\"]");
+        extraParams_2.put("json_cast_type", "double");
+        indexes.add(IndexParam.builder()
+                .fieldName("metadata")
+                .indexName("json_index_2")
+                .indexType(IndexParam.IndexType.INVERTED)
+                .extraParams(extraParams_2)
+                .build());
+
         indexes.add(IndexParam.builder()
                 .fieldName("embedding")
                 .indexType(IndexParam.IndexType.AUTOINDEX)
@@ -62,6 +86,9 @@ public class JsonField {
     }
 
     private static void createCollection(CreateCollectionReq.CollectionSchema schema, List<IndexParam> indexes) {
+        client.dropCollection(DropCollectionReq.builder()
+                .collectionName("my_json_collection")
+                .build());
         CreateCollectionReq requestCreate = CreateCollectionReq.builder()
                 .collectionName("my_json_collection")
                 .collectionSchema(schema)
@@ -73,9 +100,10 @@ public class JsonField {
     private static void insert() {
         List<JsonObject> rows = new ArrayList<>();
         Gson gson = new Gson();
-        rows.add(gson.fromJson("{\"metadata\": {\"category\": \"electronics\", \"price\": 99.99, \"brand\": \"BrandA\"}, \"pk\": 1, \"embedding\": [0.1, 0.2, 0.3]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"metadata\": {\"category\": \"home_appliances\", \"price\": 249.99, \"brand\": \"BrandB\"}, \"pk\": 2, \"embedding\": [0.4, 0.5, 0.6]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"metadata\": {\"category\": \"furniture\", \"price\": 399.99, \"brand\": \"BrandC\"}, \"pk\": 3, \"embedding\": [0.7, 0.8, 0.9]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"metadata\":{\"product_info\":{\"category\":\"electronics\",\"brand\":\"BrandA\"},\"price\":99.99,\"in_stock\":True,\"tags\":[\"summer_sale\"]},\"pk\":1,\"embedding\":[0.12,0.34,0.56]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"metadata\":null,\"pk\":2,\"embedding\":[0.56,0.78,0.90]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"pk\":3,\"embedding\":[0.91,0.18,0.23]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"metadata\":{\"product_info\":{\"category\":null,\"brand\":\"BrandB\"},\"price\":59.99,\"in_stock\":null},\"pk\":4,\"embedding\":[0.56,0.38,0.21]}", JsonObject.class));
 
         InsertResp insertR = client.insert(InsertReq.builder()
                 .collectionName("my_json_collection")
@@ -83,19 +111,20 @@ public class JsonField {
                 .build());
     }
 
-    private static void query() {
-        String filter = "metadata[\"category\"] == \"electronics\" and metadata[\"price\"] < 150";
+    private static void query(String filter) {
+        System.out.println(String.format("======= Query with filter: '%s' =======", filter));
         QueryResp resp = client.query(QueryReq.builder()
                 .collectionName("my_json_collection")
                 .filter(filter)
-                .outputFields(Collections.singletonList("metadata"))
+                .outputFields(Arrays.asList("metadata", "pk"))
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
 
         System.out.println(resp.getQueryResults());
     }
 
-    private static void search() {
-        String filter = "metadata[\"brand\"] == \"BrandA\"";
+    private static void search(String filter) {
+        System.out.println(String.format("======= Search with filter: '%s' =======", filter));
         SearchResp resp = client.search(SearchReq.builder()
                 .collectionName("my_json_collection")
                 .annsField("embedding")
@@ -113,7 +142,8 @@ public class JsonField {
         List<IndexParam> indexes = createIndex();
         createCollection(schema, indexes);
         insert();
-        query();
-        search();
+        query("metadata is not null");
+        query("metadata[\"product_info\"][\"category\"] == \"electronics\"");
+        search("metadata[\"product_info\"][\"brand\"] == \"BrandA\"");
     }
 }

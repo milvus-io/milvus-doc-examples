@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.AddFieldReq;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
+import io.milvus.v2.service.collection.request.DropCollectionReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.QueryReq;
 import io.milvus.v2.service.vector.request.SearchReq;
@@ -34,12 +36,15 @@ public class VarcharField {
                 .fieldName("varchar_field1")
                 .dataType(DataType.VarChar)
                 .maxLength(100)
+                .isNullable(true)
+                .defaultValue("Unknown")
                 .build());
 
         schema.addField(AddFieldReq.builder()
                 .fieldName("varchar_field2")
                 .dataType(DataType.VarChar)
                 .maxLength(200)
+                .isNullable(true)
                 .build());
 
         schema.addField(AddFieldReq.builder()
@@ -75,10 +80,15 @@ public class VarcharField {
     }
 
     private static void createCollection(CreateCollectionReq.CollectionSchema schema, List<IndexParam> indexes) {
+        client.dropCollection(DropCollectionReq.builder()
+                .collectionName("my_varchar_collection")
+                .build());
+
         CreateCollectionReq requestCreate = CreateCollectionReq.builder()
                 .collectionName("my_varchar_collection")
                 .collectionSchema(schema)
                 .indexParams(indexes)
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build();
         client.createCollection(requestCreate);
     }
@@ -87,8 +97,12 @@ public class VarcharField {
         List<JsonObject> rows = new ArrayList<>();
         Gson gson = new Gson();
         rows.add(gson.fromJson("{\"varchar_field1\": \"Product A\", \"varchar_field2\": \"High quality product\", \"pk\": 1, \"embedding\": [0.1, 0.2, 0.3]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"varchar_field1\": \"Product B\", \"varchar_field2\": \"Affordable price\", \"pk\": 2, \"embedding\": [0.4, 0.5, 0.6]}", JsonObject.class));
-        rows.add(gson.fromJson("{\"varchar_field1\": \"Product C\", \"varchar_field2\": \"Best seller\", \"pk\": 3, \"embedding\": [0.7, 0.8, 0.9]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": \"Product B\", \"pk\": 2, \"embedding\": [0.4, 0.5, 0.6]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": null, \"varchar_field2\": null, \"pk\": 3, \"embedding\": [0.2, 0.3, 0.1]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": \"Product C\", \"varchar_field2\": null, \"pk\": 4, \"embedding\": [0.5, 0.7, 0.2]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": null, \"varchar_field2\": \"Exclusive deal\", \"pk\": 5, \"embedding\": [0.6, 0.4, 0.8]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": \"Unknown\", \"varchar_field2\": null, \"pk\": 6, \"embedding\": [0.8, 0.5, 0.3]}", JsonObject.class));
+        rows.add(gson.fromJson("{\"varchar_field1\": \"\", \"varchar_field2\": \"Best seller\", \"pk\": 7, \"embedding\": [0.8, 0.5, 0.3]}", JsonObject.class));
 
         InsertResp insertR = client.insert(InsertReq.builder()
                 .collectionName("my_varchar_collection")
@@ -96,8 +110,8 @@ public class VarcharField {
                 .build());
     }
 
-    private static void query() {
-        String filter = "varchar_field1 == \"Product A\"";
+    private static void query(String filter) {
+        System.out.println(String.format("======= Query with filter: '%s' =======", filter));
         QueryResp resp = client.query(QueryReq.builder()
                 .collectionName("my_varchar_collection")
                 .filter(filter)
@@ -107,8 +121,8 @@ public class VarcharField {
         System.out.println(resp.getQueryResults());
     }
 
-    private static void search() {
-        String filter = "varchar_field1 == \"Product A\"";
+    private static void search(String filter) {
+        System.out.println(String.format("======= Search with filter: '%s' =======", filter));
         SearchResp resp = client.search(SearchReq.builder()
                 .collectionName("my_varchar_collection")
                 .annsField("embedding")
@@ -126,7 +140,9 @@ public class VarcharField {
         List<IndexParam> indexes = createIndex();
         createCollection(schema, indexes);
         insert();
-        query();
-        search();
+        query("varchar_field1 == \"Product A\"");
+        query("varchar_field2 is null");
+        query("varchar_field1 == \"Unknown\"");
+        search("varchar_field2 == \"Best seller\"");
     }
 }
