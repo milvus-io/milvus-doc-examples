@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.AddFieldReq;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
+import io.milvus.v2.service.collection.request.DropCollectionReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
 import io.milvus.v2.service.vector.request.data.SparseFloatVec;
@@ -21,6 +23,12 @@ public class SparseVector {
     static {
         client = new MilvusClientV2(ConnectConfig.builder()
                 .uri("http://localhost:19530")
+                .build());
+    }
+
+    private static void dropCollection() {
+        client.dropCollection(DropCollectionReq.builder()
+                .collectionName("my_sparse_collection")
                 .build());
     }
 
@@ -42,7 +50,7 @@ public class SparseVector {
 
         List<IndexParam> indexes = new ArrayList<>();
         Map<String,Object> extraParams = new HashMap<>();
-        extraParams.put("drop_ratio_build", 0.2);
+        extraParams.put("inverted_index_algo", "DAAT_MAXSCORE");
         indexes.add(IndexParam.builder()
                 .fieldName("sparse_vector")
                 .indexName("sparse_inverted_index")
@@ -92,9 +100,9 @@ public class SparseVector {
         searchParams.put("drop_ratio_search", 0.2);
 
         SortedMap<Long, Float> sparse = new TreeMap<>();
-        sparse.put(10L, 0.1f);
-        sparse.put(200L, 0.7f);
-        sparse.put(1000L, 0.9f);
+        sparse.put(1L, 0.2f);
+        sparse.put(50L, 0.4f);
+        sparse.put(1000L, 0.7f);
 
         SparseFloatVec queryVector = new SparseFloatVec(sparse);
 
@@ -105,12 +113,14 @@ public class SparseVector {
                 .searchParams(searchParams)
                 .topK(3)
                 .outputFields(Collections.singletonList("pk"))
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
 
         System.out.println(searchR.getSearchResults());
     }
 
     public static void main(String[] args) {
+        dropCollection();
         createCollection();
         insert();
         search();
