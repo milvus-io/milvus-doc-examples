@@ -38,7 +38,7 @@ index_params.add_index(
     index_name="sparse_inverted_index",
     index_type="SPARSE_INVERTED_INDEX",
     metric_type="IP",
-    params={"drop_ratio_build": 0.2},
+    params={"inverted_index_algo": "DAAT_MAXSCORE"},
 )
 
 # create collection

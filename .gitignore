@@ -35,3 +35,7 @@ java/!**/src/test/**/build/
 
 ### Mac OS ###
 .DS_Store
+
+### Go
+go/milvus-go-examples
+__debug_*
