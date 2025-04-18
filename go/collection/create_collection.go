@@ -22,24 +22,23 @@ func CreateCollection() {
 	defer client.Close(ctx)
 
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
-		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
+		WithField(entity.NewField().WithName("my_id").WithIsAutoID(false).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	collectionName := "customized_setup_1"
 	indexOptions := []milvusclient.CreateIndexOption{
-		milvusclient.NewCreateIndexOption(collectionName, "my_vector", index.NewAutoIndex(entity.COSINE)).WithIndexName("my_vector"),
-		milvusclient.NewCreateIndexOption(collectionName, "my_id", index.NewAutoIndex(entity.COSINE)).WithIndexName("my_id"),
+		milvusclient.NewCreateIndexOption("customized_setup_1", "my_vector", index.NewAutoIndex(entity.COSINE)),
+		milvusclient.NewCreateIndexOption("customized_setup_1", "my_id", index.NewAutoIndex(entity.COSINE)),
 	}
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema).WithIndexOptions(indexOptions...))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_1", schema).WithIndexOptions(indexOptions...))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_1"))
 }
 
 func CreateCollectionWithoutIndex() {
@@ -51,27 +50,26 @@ func CreateCollectionWithoutIndex() {
 		fmt.Println(err.Error())
 	}
 
-	collectionName := "customized_setup_1"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_2", schema))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption(collectionName))
+	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption("customized_setup_2"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println(state.State)
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_2"))
 }
 
 func CreateCollectionWithShardNum() {
@@ -83,20 +81,20 @@ func CreateCollectionWithShardNum() {
 		fmt.Println(err.Error())
 	}
 
-	collectionName := "customized_setup_1"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema).WithShardNum(1))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_3", schema).
+		WithShardNum(1))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_3"))
 }
 
 func CreateCollectionWithMmap() {
@@ -108,20 +106,20 @@ func CreateCollectionWithMmap() {
 		fmt.Println(err.Error())
 	}
 
-	collectionName := "customized_setup_1"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema).WithProperty(common.MmapEnabledKey, true))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_4", schema).
+		WithProperty(common.MmapEnabledKey, true))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_4"))
 }
 
 func CreateCollectionWithTTL() {
@@ -133,20 +131,20 @@ func CreateCollectionWithTTL() {
 		fmt.Println(err.Error())
 	}
 
-	collectionName := "customized_setup_1"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema).WithProperty(common.CollectionTTLConfigKey, true))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_5", schema).
+		WithProperty(common.CollectionTTLConfigKey, true))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_5"))
 }
 
 func CreateCollectionWithConsistencyLevel() {
@@ -158,18 +156,18 @@ func CreateCollectionWithConsistencyLevel() {
 		fmt.Println(err.Error())
 	}
 
-	collectionName := "customized_setup_1"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
 		WithField(entity.NewField().WithName("my_varchar").WithDataType(entity.FieldTypeVarChar).WithMaxLength(512))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption(collectionName, schema).WithConsistencyLevel(entity.ClBounded))
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("customized_setup_6", schema).
+		WithConsistencyLevel(entity.ClBounded))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_6"))
 }

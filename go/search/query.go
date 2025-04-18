@@ -6,7 +6,6 @@ import (
 
 	"github.com/milvus-go-examples/util"
 	"github.com/milvus-io/milvus/client/v2/column"
-	"github.com/milvus-io/milvus/client/v2/entity"
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 )
 
@@ -29,7 +28,6 @@ func get() {
 	defer client.Close(ctx)
 
 	resultSet, err := client.Get(ctx, milvusclient.NewQueryOption("my_collection").
-		WithConsistencyLevel(entity.ClStrong).
 		WithIDs(column.NewColumnInt64("id", []int64{0, 1, 2})).
 		WithOutputFields("vector", "color"))
 	if err != nil {

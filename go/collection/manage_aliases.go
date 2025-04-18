@@ -18,20 +18,20 @@ func CreateAlias() {
 	}
 	defer client.Close(ctx)
 
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("customized_setup_2", 5))
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("my_collection_1", 5))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	err = client.CreateAlias(ctx, milvusclient.NewCreateAliasOption("customized_setup_2", "bob"))
+	err = client.CreateAlias(ctx, milvusclient.NewCreateAliasOption("my_collection_1", "bob"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	err = client.CreateAlias(ctx, milvusclient.NewCreateAliasOption("customized_setup_2", "alice"))
+	err = client.CreateAlias(ctx, milvusclient.NewCreateAliasOption("my_collection_1", "alice"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -48,7 +48,7 @@ func ListAliases() {
 	}
 	defer client.Close(ctx)
 
-	aliases, err := client.ListAliases(ctx, milvusclient.NewListAliasesOption("customized_setup_2"))
+	aliases, err := client.ListAliases(ctx, milvusclient.NewListAliasesOption("my_collection_1"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -84,27 +84,27 @@ func AlterAlias() {
 	}
 	defer client.Close(ctx)
 
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("customized_setup_1", 5))
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("my_collection_2", 5))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	err = client.AlterAlias(ctx, milvusclient.NewAlterAliasOption("alice", "customized_setup_1"))
+	err = client.AlterAlias(ctx, milvusclient.NewAlterAliasOption("alice", "my_collection_2"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	aliases, err := client.ListAliases(ctx, milvusclient.NewListAliasesOption("customized_setup_1"))
+	aliases, err := client.ListAliases(ctx, milvusclient.NewListAliasesOption("my_collection_1"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println(aliases)
 
-	aliases, err = client.ListAliases(ctx, milvusclient.NewListAliasesOption("customized_setup_2"))
+	aliases, err = client.ListAliases(ctx, milvusclient.NewListAliasesOption("my_collection_2"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -134,5 +134,6 @@ func DropAlias() {
 		// handle error
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_1"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection_1"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection_2"))
 }

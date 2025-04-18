@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/milvus-go-examples/collection"
+	"github.com/milvus-go-examples/database"
 	"github.com/milvus-go-examples/dml"
+	"github.com/milvus-go-examples/rbac"
 	"github.com/milvus-go-examples/schema"
 	"github.com/milvus-go-examples/search"
 	"github.com/milvus-go-examples/util"
@@ -87,7 +89,7 @@ func userGuideDml() {
 func userGuideDql() {
 	fmt.Println("userGuideDql()")
 
-	util.CreateCollection()
+	util.CreateCollection("my_collection")
 
 	search.BasicSearch()
 	search.FilteredSearch()
@@ -95,10 +97,27 @@ func userGuideDql() {
 	search.GroupSearch()
 	search.Query()
 
-	util.DropCollection()
+	util.DropCollection("my_collection")
 
 	search.HybridSearch()
 	search.FullTextSearch()
+	search.TextMatch()
+	search.PartitionKey()
+	search.Mmap()
+	search.ConsistencyLevel()
+	search.MetadataFiltering()
+}
+
+func userGuideRBAC() {
+	rbac.CreateUser()
+	rbac.CreateGroup()
+	rbac.GrantPrivilige()
+	rbac.GrantRole()
+	rbac.DropUser()
+}
+
+func userGuideDB() {
+	database.ManageDatabase()
 }
 
 func main() {
@@ -106,4 +125,6 @@ func main() {
 	userGuideSchema()
 	userGuideDml()
 	userGuideDql()
+	userGuideRBAC()
+	userGuideDB()
 }

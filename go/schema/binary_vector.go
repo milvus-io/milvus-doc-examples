@@ -34,17 +34,17 @@ func BinaryVector() {
 	)
 
 	idx := index.NewAutoIndex(entity.HAMMING)
-	indexOption := milvusclient.NewCreateIndexOption("my_binary_collection", "binary_vector", idx)
+	indexOption := milvusclient.NewCreateIndexOption("my_collection", "binary_vector", idx)
 
 	err = client.CreateCollection(ctx,
-		milvusclient.NewCreateCollectionOption("my_binary_collection", schema).
+		milvusclient.NewCreateCollectionOption("my_collection", schema).
 			WithIndexOptions(indexOption))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_binary_collection").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithBinaryVectorColumn("binary_vector", 128, [][]byte{
 			{0b10011011, 0b01010100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0b10011011, 0b01010101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -54,29 +54,17 @@ func BinaryVector() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_binary_collection"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
-
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
 	queryVector := []byte{0b10011011, 0b01010100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	annSearchParams := index.NewCustomAnnParam()
 	annSearchParams.WithExtraParam("nprobe", 10)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"my_binary_collection", // collectionName
-		5,                      // limit
+		"my_collection", // collectionName
+		5,               // limit
 		[]entity.Vector{entity.BinaryVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithANNSField("binary_vector").
+	).WithANNSField("binary_vector").
 		WithOutputFields("pk").
 		WithAnnParam(annSearchParams))
 	if err != nil {
@@ -90,5 +78,5 @@ func BinaryVector() {
 		fmt.Println("Pks: ", resultSet.GetColumn("pk").FieldData().GetScalars())
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_binary_collection"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

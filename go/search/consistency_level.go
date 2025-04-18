@@ -1,4 +1,4 @@
-package schema
+package search
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 )
 
-func DenseVector() {
+func ConsistencyLevel() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -20,32 +20,32 @@ func DenseVector() {
 	}
 	defer client.Close(ctx)
 
-	schema := entity.NewSchema()
+	schema := entity.NewSchema().WithDynamicFieldEnabled(true)
 	schema.WithField(entity.NewField().
-		WithName("pk").
-		WithDataType(entity.FieldTypeVarChar).
+		WithName("id").
+		WithDataType(entity.FieldTypeInt64).
 		WithIsPrimaryKey(true).
-		WithIsAutoID(true).
-		WithMaxLength(100),
+		WithIsAutoID(true),
 	).WithField(entity.NewField().
-		WithName("dense_vector").
+		WithName("vector").
 		WithDataType(entity.FieldTypeFloatVector).
 		WithDim(4),
 	)
 
 	idx := index.NewAutoIndex(index.MetricType(entity.IP))
-	indexOption := milvusclient.NewCreateIndexOption("my_collection", "dense_vector", idx)
+	indexOption := milvusclient.NewCreateIndexOption("my_collection", "vector", idx)
 
 	err = client.CreateCollection(ctx,
 		milvusclient.NewCreateCollectionOption("my_collection", schema).
-			WithIndexOptions(indexOption))
+			WithIndexOptions(indexOption).
+			WithConsistencyLevel(entity.ClStrong))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
 	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
-		WithFloatVectorColumn("dense_vector", 4, [][]float32{
+		WithFloatVectorColumn("vector", 4, [][]float32{
 			{0.1, 0.2, 0.3, 0.7},
 			{0.2, 0.3, 0.4, 0.8},
 		}),
@@ -55,19 +55,27 @@ func DenseVector() {
 		// handle err
 	}
 
-	util.FlushLoadCollection(client, "my_collection")
+	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_collection"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle err
+	}
+
+	// sync wait collection to be loaded
+	err = loadTask.Await(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
 
 	queryVector := []float32{0.1, 0.2, 0.3, 0.7}
 
-	annParam := index.NewCustomAnnParam()
-	annParam.WithExtraParam("nprobe", 10)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
 		"my_collection", // collectionName
-		5,               // limit
+		3,               // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithANNSField("dense_vector").
-		WithOutputFields("pk").
-		WithAnnParam(annParam))
+	).WithConsistencyLevel(entity.ClBounded).
+		WithANNSField("vector"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -76,8 +84,19 @@ func DenseVector() {
 	for _, resultSet := range resultSets {
 		fmt.Println("IDs: ", resultSet.IDs.FieldData().GetScalars())
 		fmt.Println("Scores: ", resultSet.Scores)
-		fmt.Println("Pks: ", resultSet.GetColumn("pk").FieldData().GetScalars())
 	}
+
+	resultSet, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter("color like \"red%\"").
+		WithOutputFields("vector", "color").
+		WithLimit(3).
+		WithConsistencyLevel(entity.ClEventually))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println("vector: ", resultSet.GetColumn("vector").FieldData().GetVectors())
+	fmt.Println("color: ", resultSet.GetColumn("color").FieldData().GetScalars())
 
 	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

@@ -20,7 +20,9 @@ func DynamicField() {
 		fmt.Println(err.Error())
 	}
 
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("my_dynamic_collection", 5).WithAutoID(false))
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("my_collection", 5).
+		WithAutoID(false).
+		WithDynamicSchema(true))
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -29,7 +31,7 @@ func DynamicField() {
 		"pink_8682", "red_7025", "orange_6781", "pink_9298", "red_4794", "yellow_4222", "red_9392", "grey_8510", "white_9381", "purple_4976",
 	})
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_dynamic_collection").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithInt64Column("id", []int64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}).
 		WithFloatVectorColumn("vector", 5, [][]float32{
 			{0.3580376395471989, -0.6023495712049978, 0.18414012509913835, -0.26286205330961354, 0.9029438446296592},
@@ -50,20 +52,9 @@ func DynamicField() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_dynamic_collection"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-
-	indexTask, err := client.CreateIndex(ctx, milvusclient.NewCreateIndexOption("my_dynamic_collection", "color",
+	indexTask, err := client.CreateIndex(ctx, milvusclient.NewCreateIndexOption("my_collection", "color",
 		index.NewJSONPathIndex(index.Inverted, "varchar", "color")))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -79,11 +70,10 @@ func DynamicField() {
 	queryVector := []float32{0.3580376395471989, -0.6023495712049978, 0.18414012509913835, -0.26286205330961354, 0.9029438446296592}
 
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"my_dynamic_collection", // collectionName
-		5,                       // limit
+		"my_collection", // collectionName
+		5,               // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithFilter("color like \"red%\"").
+	).WithFilter("color like \"red%\"").
 		WithANNSField("vector").
 		WithOutputFields("color"))
 	if err != nil {
@@ -97,5 +87,5 @@ func DynamicField() {
 		fmt.Println("color: ", resultSet.GetColumn("color").FieldData().GetScalars())
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_dynamic_collection"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

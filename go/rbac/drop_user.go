@@ -1,4 +1,4 @@
-package collection
+package rbac
 
 import (
 	"context"
@@ -8,17 +8,24 @@ import (
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 )
 
-func DropCollection() {
+func DropUser() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	client, err := util.GetClient(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
+		// handle error
 	}
 	defer client.Close(ctx)
 
-	err = client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
+	err = client.DropUser(ctx, milvusclient.NewDropUserOption("user_1"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	err = client.DropRole(ctx, milvusclient.NewDropRoleOption("role_a"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error

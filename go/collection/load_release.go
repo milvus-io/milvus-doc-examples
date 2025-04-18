@@ -20,7 +20,7 @@ func Load() {
 	}
 	defer client.Close(ctx)
 
-	collectionName := "customized_setup_1"
+	collectionName := "my_collection"
 	schema := entity.NewSchema().WithDynamicFieldEnabled(true).
 		WithField(entity.NewField().WithName("my_id").WithIsAutoID(true).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true)).
 		WithField(entity.NewField().WithName("my_vector").WithDataType(entity.FieldTypeFloatVector).WithDim(5)).
@@ -38,7 +38,7 @@ func Load() {
 	}
 	fmt.Println("collection created")
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("customized_setup_1"))
+	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_collection"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle err
@@ -50,6 +50,13 @@ func Load() {
 		fmt.Println(err.Error())
 		// handle error
 	}
+
+	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption("my_collection"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println(state)
 }
 
 func LoadFields() {
@@ -63,7 +70,7 @@ func LoadFields() {
 
 	defer client.Close(ctx)
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("customized_setup_1").
+	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_collection").
 		WithLoadFields("my_id", "my_vector"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -77,7 +84,14 @@ func LoadFields() {
 		// handle error
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("customized_setup_1"))
+	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption("my_collection"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println(state)
+
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }
 
 func Release() {
@@ -92,9 +106,16 @@ func Release() {
 
 	defer client.Close(ctx)
 
-	err = client.ReleaseCollection(ctx, milvusclient.NewReleaseCollectionOption("customized_setup_1"))
+	err = client.ReleaseCollection(ctx, milvusclient.NewReleaseCollectionOption("my_collection"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
+
+	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption("my_collection"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println(state)
 }

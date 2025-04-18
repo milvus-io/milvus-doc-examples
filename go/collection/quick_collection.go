@@ -20,15 +20,14 @@ func QuickSetup() {
 	}
 	defer client.Close(ctx)
 
-	collectionName := "quick_setup"
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions(collectionName, 5))
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("quick_setup", 5))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	// client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("quick_setup"))
 }
 
 func QuickSetupCustomFields() {
@@ -41,8 +40,7 @@ func QuickSetupCustomFields() {
 	}
 	defer client.Close(ctx)
 
-	collectionName := "custom_quick_setup"
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions(collectionName, 5).
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("custom_quick_setup", 5).
 		WithPKFieldName("my_id").
 		WithVarcharPK(true, 512).
 		WithVectorFieldName("my_vector").
@@ -55,5 +53,5 @@ func QuickSetupCustomFields() {
 	}
 	fmt.Println("collection created")
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("custom_quick_setup"))
 }

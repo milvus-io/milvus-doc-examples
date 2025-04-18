@@ -13,7 +13,7 @@ import (
 
 func HybridSearch() {
 	createCollectionHybrid()
-	defer dropCollectionHybrid()
+	defer util.DropCollection("hybrid_search_collection")
 
 	standardHybridSearch()
 }
@@ -106,20 +106,6 @@ func createCollectionHybrid() {
 	}
 }
 
-func dropCollectionHybrid() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	client, err := util.GetClient(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-	defer client.Close(ctx)
-
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("hybrid_search_collection"))
-}
-
 func standardHybridSearch() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -143,7 +129,7 @@ func standardHybridSearch() {
 		WithSearchParam(index.MetricTypeKey, "IP")
 
 	reranker := milvusclient.NewWeightedReranker([]float64{0.8, 0.3})
-	// reranker := milvusclient.NewRRFReranker()
+	// reranker := milvusclient.NewRRFReranker().WithK(100)
 
 	resultSets, err := client.HybridSearch(ctx, milvusclient.NewHybridSearchOption(
 		"hybrid_search_collection",

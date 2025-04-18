@@ -69,8 +69,10 @@ func SchemaDesign() {
 		index.NewAutoIndex(index.MetricType(entity.IP)))
 	indexOption2 := milvusclient.NewCreateIndexOption(collectionName, "summary_dense_vector",
 		index.NewAutoIndex(index.MetricType(entity.IP)))
+	// indexOption3 := milvusclient.NewCreateIndexOption(collectionName, "summary_sparse_vector",
+	// 	index.NewSparseInvertedIndex(index.MetricType(entity.IP), 0.2))
 	indexOption3 := milvusclient.NewCreateIndexOption(collectionName, "summary_sparse_vector",
-		index.NewSparseInvertedIndex(index.MetricType(entity.IP), 0.2))
+		index.NewAutoIndex(index.MetricType(entity.IP)))
 	indexOption4 := milvusclient.NewCreateIndexOption(collectionName, "publish_ts",
 		index.NewInvertedIndex())
 
