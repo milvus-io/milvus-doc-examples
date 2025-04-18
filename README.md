@@ -1,2 +1,2 @@
-# milvus-doc-samples
+# milvus-doc-examples
 Milvus documents examples
