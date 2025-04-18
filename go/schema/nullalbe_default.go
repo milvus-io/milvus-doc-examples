@@ -35,11 +35,11 @@ func NullableField() {
 		WithNullable(true),
 	)
 
-	indexOption := milvusclient.NewCreateIndexOption("user_profiles_null", "vector",
+	indexOption := milvusclient.NewCreateIndexOption("my_collection", "vector",
 		index.NewAutoIndex(index.MetricType(entity.L2)))
 
 	err = client.CreateCollection(ctx,
-		milvusclient.NewCreateCollectionOption("user_profiles_null", schema).
+		milvusclient.NewCreateCollectionOption("my_collection", schema).
 			WithIndexOptions(indexOption))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -50,7 +50,7 @@ func NullableField() {
 		[]int64{30},
 		[]bool{true, false, false})
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("user_profiles_null").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithInt64Column("id", []int64{1, 2, 3}).
 		WithFloatVectorColumn("vector", 5, [][]float32{
 			{0.1, 0.2, 0.3, 0.4, 0.5},
@@ -64,29 +64,17 @@ func NullableField() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("user_profiles_null"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-
-	queryVector := []float32{0.1, 0.2, 0.4, 0.3, 0.128}
+	queryVector := []float32{0.1, 0.2, 0.4, 0.3, 0.5}
 
 	annParam := index.NewCustomAnnParam()
 	annParam.WithExtraParam("nprobe", 16)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"user_profiles_null", // collectionName
-		5,                    // limit
+		"my_collection", // collectionName
+		2,               // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithANNSField("vector").
+	).WithANNSField("vector").
 		WithAnnParam(annParam).
 		WithOutputFields("id", "age"))
 	if err != nil {
@@ -100,7 +88,28 @@ func NullableField() {
 		fmt.Println("age: ", resultSet.GetColumn("age"))
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("user_profiles_null"))
+	resultSet, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter("age >= 0").
+		WithOutputFields("id", "age"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println("id: ", resultSet.GetColumn("id").FieldData().GetScalars())
+	fmt.Println("age: ", resultSet.GetColumn("age").FieldData().GetScalars())
+
+	resultSet, err = client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter("").
+		WithLimit(10).
+		WithOutputFields("id", "age"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println("id: ", resultSet.GetColumn("id"))
+	fmt.Println("age: ", resultSet.GetColumn("age"))
+
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }
 
 func DefaultField() {
@@ -132,11 +141,11 @@ func DefaultField() {
 		WithDefaultValueString("active"),
 	)
 
-	indexOption := milvusclient.NewCreateIndexOption("user_profiles_default", "vector",
+	indexOption := milvusclient.NewCreateIndexOption("my_collection", "vector",
 		index.NewAutoIndex(index.MetricType(entity.L2)))
 
 	err = client.CreateCollection(ctx,
-		milvusclient.NewCreateCollectionOption("user_profiles_default", schema).
+		milvusclient.NewCreateCollectionOption("my_collection", schema).
 			WithIndexOptions(indexOption))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -150,7 +159,7 @@ func DefaultField() {
 		[]string{"premium", "inactive"},
 		[]bool{true, false, false, true})
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("user_profiles_default").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithInt64Column("id", []int64{1, 2, 3, 4}).
 		WithFloatVectorColumn("vector", 5, [][]float32{
 			{0.1, 0.2, 0.3, 0.4, 0.5},
@@ -165,31 +174,19 @@ func DefaultField() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("user_profiles_default"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-
-	queryVector := []float32{0.1, 0.2, 0.4, 0.3, 0.128}
+	queryVector := []float32{0.1, 0.2, 0.4, 0.3, 0.5}
 
 	annParam := index.NewCustomAnnParam()
 	annParam.WithExtraParam("nprobe", 16)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"user_profiles_default", // collectionName
-		10,                      // limit
+		"my_collection", // collectionName
+		10,              // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithANNSField("vector").
-		WithAnnParam(annParam).
+	).WithANNSField("vector").
 		WithFilter("age == 18").
+		WithAnnParam(annParam).
 		WithOutputFields("id", "age", "status"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -199,9 +196,31 @@ func DefaultField() {
 	for _, resultSet := range resultSets {
 		fmt.Println("IDs: ", resultSet.IDs.FieldData().GetScalars())
 		fmt.Println("Scores: ", resultSet.Scores)
-		fmt.Println("age: ", resultSet.GetColumn("age"))
-		fmt.Println("status: ", resultSet.GetColumn("status"))
+		fmt.Println("age: ", resultSet.GetColumn("age").FieldData().GetScalars())
+		fmt.Println("status: ", resultSet.GetColumn("status").FieldData().GetScalars())
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("user_profiles_default"))
+	resultSet, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter("age == 18").
+		WithOutputFields("id", "age", "status"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println("id: ", resultSet.GetColumn("id").FieldData().GetScalars())
+	fmt.Println("age: ", resultSet.GetColumn("age").FieldData().GetScalars())
+	fmt.Println("status: ", resultSet.GetColumn("status").FieldData().GetScalars())
+
+	resultSet, err = client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter("status == \"active\"").
+		WithOutputFields("id", "age", "status"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println("id: ", resultSet.GetColumn("id").FieldData().GetScalars())
+	fmt.Println("age: ", resultSet.GetColumn("age").FieldData().GetScalars())
+	fmt.Println("status: ", resultSet.GetColumn("status").FieldData().GetScalars())
+
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

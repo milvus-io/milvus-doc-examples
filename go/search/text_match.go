@@ -10,14 +10,14 @@ import (
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 )
 
-func FullTextSearch() {
-	createCollectionFull()
+func TextMatch() {
+	createCollectionText()
 	defer util.DropCollection("my_collection")
 
-	fullTextSearch()
+	textMatchSearch()
 }
 
-func createCollectionFull() {
+func createCollectionText() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -27,7 +27,9 @@ func createCollectionFull() {
 	}
 	defer client.Close(ctx)
 
-	schema := entity.NewSchema()
+	analyzerParams := map[string]any{"type": "english"}
+
+	schema := entity.NewSchema().WithDynamicFieldEnabled(false)
 	schema.WithField(entity.NewField().
 		WithName("id").
 		WithDataType(entity.FieldTypeInt64).
@@ -37,21 +39,17 @@ func createCollectionFull() {
 		WithName("text").
 		WithDataType(entity.FieldTypeVarChar).
 		WithEnableAnalyzer(true).
+		WithEnableMatch(true).
+		WithAnalyzerParams(analyzerParams).
 		WithMaxLength(1000),
 	).WithField(entity.NewField().
-		WithName("sparse").
-		WithDataType(entity.FieldTypeSparseVector),
+		WithName("embeddings").
+		WithDataType(entity.FieldTypeFloatVector).
+		WithDim(5),
 	)
 
-	function := entity.NewFunction().
-		WithName("text_bm25_emb").
-		WithInputFields("text").
-		WithOutputFields("sparse").
-		WithType(entity.FunctionTypeBM25)
-	schema.WithFunction(function)
-
-	indexOption := milvusclient.NewCreateIndexOption("my_collection", "sparse",
-		index.NewAutoIndex(entity.MetricType(entity.BM25)))
+	indexOption := milvusclient.NewCreateIndexOption("my_collection", "embeddings",
+		index.NewAutoIndex(entity.MetricType(entity.L2)))
 
 	err = client.CreateCollection(ctx,
 		milvusclient.NewCreateCollectionOption("my_collection", schema).
@@ -63,9 +61,14 @@ func createCollectionFull() {
 
 	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithVarcharColumn("text", []string{
-			"information retrieval is a field of study.",
-			"information retrieval focuses on finding relevant information in large datasets.",
-			"data mining and information retrieval overlap in research.",
+			"this is keyword1.",
+			"no keyword.",
+			"keyword1 and keyword2.",
+		}).
+		WithFloatVectorColumn("embeddings", 5, [][]float32{
+			{0.1, 0.2, 0.3, 0.4, 0.5},
+			{0.2, 0.3, 0.4, 0.5, 0.6},
+			{0.3, 0.4, 0.5, 0.6, 0.7},
 		}))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -75,7 +78,7 @@ func createCollectionFull() {
 	util.FlushLoadCollection(client, "my_collection")
 }
 
-func fullTextSearch() {
+func textMatchSearch() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -85,15 +88,16 @@ func fullTextSearch() {
 	}
 	defer client.Close(ctx)
 
-	annSearchParams := index.NewCustomAnnParam()
-	annSearchParams.WithExtraParam("drop_ratio_search", 0.2)
+	queryVector := []float32{0.1, 0.2, 0.3, 0.5, 0.7}
+	filter := "TEXT_MATCH(text, 'keyword1 keyword2')"
+
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
 		"my_collection", // collectionName
-		3,               // limit
-		[]entity.Vector{entity.Text("whats the focus of information retrieval?")},
-	).WithANNSField("sparse").
-		WithAnnParam(annSearchParams).
-		WithOutputFields("text"))
+		10,              // limit
+		[]entity.Vector{entity.FloatVector(queryVector)},
+	).WithANNSField("embeddings").
+		WithFilter(filter).
+		WithOutputFields("id", "text"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -104,4 +108,16 @@ func fullTextSearch() {
 		fmt.Println("Scores: ", resultSet.Scores)
 		fmt.Println("text: ", resultSet.GetColumn("text").FieldData().GetScalars())
 	}
+
+	filter = "TEXT_MATCH(text, 'keyword1') and TEXT_MATCH(text, 'keyword2')"
+	resultSet, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter(filter).
+		WithOutputFields("id", "text"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	fmt.Println("id: ", resultSet.GetColumn("id").FieldData().GetScalars())
+	fmt.Println("text: ", resultSet.GetColumn("text").FieldData().GetScalars())
 }

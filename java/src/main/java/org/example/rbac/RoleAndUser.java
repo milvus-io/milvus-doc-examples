@@ -194,10 +194,10 @@ public class RoleAndUser {
         addPrivilegeToGroup();
         removePrivilegeFromGroup();
         listPrivilegeGroups();
-        dropPrivilegeGroup();
         grantPrivilege();
         describeRole();
         revokePrivilege();
+        dropPrivilegeGroup();
         grantRole();
         describeUser();
         revokeUser();

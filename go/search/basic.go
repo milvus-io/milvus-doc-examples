@@ -133,7 +133,7 @@ func outputFieldsSearch() {
 	for _, resultSet := range resultSets {
 		fmt.Println("IDs: ", resultSet.IDs.FieldData().GetScalars())
 		fmt.Println("Scores: ", resultSet.Scores)
-		fmt.Println("color: ", resultSet.GetColumn("color").FieldData().GetScalars())
+		fmt.Println("color: ", resultSet.GetColumn("color"))
 	}
 }
 

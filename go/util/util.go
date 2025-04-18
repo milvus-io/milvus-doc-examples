@@ -10,15 +10,10 @@ import (
 	"github.com/milvus-io/milvus/client/v2/milvusclient"
 )
 
-const (
-	collectionName = "my_collection"
-)
-
 func GetClient(ctx context.Context) (*milvusclient.Client, error) {
-	milvusAddr := "localhost:19530"
-
 	client, err := milvusclient.New(ctx, &milvusclient.ClientConfig{
-		Address: milvusAddr,
+		Address: "localhost:19530",
+		APIKey:  "root:Milvus",
 	})
 	if err != nil {
 		fmt.Println(err.Error())
@@ -28,7 +23,7 @@ func GetClient(ctx context.Context) (*milvusclient.Client, error) {
 	return client, nil
 }
 
-func CreateCollection() {
+func CreateCollection(collectionName string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -110,12 +105,6 @@ func CreateCollection() {
 		// handle err
 	}
 
-	_, err = client.Flush(ctx, milvusclient.NewFlushOption(collectionName))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
-
 	indexTask, err := client.CreateIndex(ctx, milvusclient.NewCreateIndexOption(collectionName, "vector",
 		index.NewAutoIndex(index.MetricType(entity.IP))))
 	if err != nil {
@@ -129,21 +118,10 @@ func CreateCollection() {
 		// handler err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption(collectionName))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
+	FlushLoadCollection(client, collectionName)
 }
 
-func DropCollection() {
+func DropCollection(collectionName string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -154,4 +132,34 @@ func DropCollection() {
 	defer client.Close(ctx)
 
 	client.DropCollection(ctx, milvusclient.NewDropCollectionOption(collectionName))
+}
+
+func FlushLoadCollection(client *milvusclient.Client, collectionName string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	flushTask, err := client.Flush(ctx, milvusclient.NewFlushOption(collectionName))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle err
+	}
+
+	err = flushTask.Await(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption(collectionName))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle err
+	}
+
+	// sync wait collection to be loaded
+	err = loadTask.Await(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.ConnectConfig;
 import io.milvus.v2.client.MilvusClientV2;
+import io.milvus.v2.common.ConsistencyLevel;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
 import io.milvus.v2.service.collection.request.AddFieldReq;
@@ -99,6 +100,7 @@ public class NullDefault {
                 .topK(2)
                 .searchParams(params)
                 .outputFields(Arrays.asList("id", "age"))
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
 
         System.out.println(resp.getSearchResults());
@@ -198,6 +200,7 @@ public class NullDefault {
                 .filter("age == 18")
                 .topK(10)
                 .outputFields(Arrays.asList("id", "age", "status"))
+                .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
 
         System.out.println(resp.getSearchResults());

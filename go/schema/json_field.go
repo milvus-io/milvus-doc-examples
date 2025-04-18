@@ -36,20 +36,20 @@ func JsonField() {
 
 	jsonIndex1 := index.NewJSONPathIndex(index.Inverted, "varchar", `metadata["product_info"]["category"]`)
 	jsonIndex2 := index.NewJSONPathIndex(index.Inverted, "double", `metadata["price"]`)
-	indexOpt1 := milvusclient.NewCreateIndexOption("my_json_collection", "metadata", jsonIndex1)
-	indexOpt2 := milvusclient.NewCreateIndexOption("my_json_collection", "metadata", jsonIndex2)
+	indexOpt1 := milvusclient.NewCreateIndexOption("my_collection", "metadata", jsonIndex1)
+	indexOpt2 := milvusclient.NewCreateIndexOption("my_collection", "metadata", jsonIndex2)
 
 	vectorIndex := index.NewAutoIndex(entity.COSINE)
-	indexOpt := milvusclient.NewCreateIndexOption("my_json_collection", "embedding", vectorIndex)
+	indexOpt := milvusclient.NewCreateIndexOption("my_collection", "embedding", vectorIndex)
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("my_json_collection", schema).
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("my_collection", schema).
 		WithIndexOptions(indexOpt1, indexOpt2, indexOpt))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handler err
 	}
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_json_collection").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithInt64Column("pk", []int64{1, 2, 3, 4}).
 		WithFloatVectorColumn("embedding", 3, [][]float32{
 			{0.12, 0.34, 0.56},
@@ -78,21 +78,23 @@ func JsonField() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_json_collection"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
+	filter := "metadata is not null"
+	rs, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter(filter).
+		WithOutputFields("metadata", "pk"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	rs, err := client.Query(ctx, milvusclient.NewQueryOption("my_json_collection").
-		WithFilter("metadata is not null").
+	fmt.Println("pk", rs.GetColumn("pk").FieldData().GetScalars())
+	fmt.Println("metadata", rs.GetColumn("metadata").FieldData().GetScalars())
+
+	filter = `metadata["product_info"]["category"] == "electronics"`
+	rs, err = client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter(filter).
 		WithOutputFields("metadata", "pk"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -103,15 +105,16 @@ func JsonField() {
 	fmt.Println("metadata", rs.GetColumn("metadata").FieldData().GetScalars())
 
 	queryVector := []float32{0.3, -0.6, -0.1}
+	filter = "metadata[\"product_info\"][\"brand\"] == \"BrandA\""
 
 	annParam := index.NewCustomAnnParam()
 	annParam.WithExtraParam("nprobe", 10)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"my_json_collection", // collectionName
-		5,                    // limit
+		"my_collection", // collectionName
+		5,               // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithANNSField("embedding").
+	).WithANNSField("embedding").
+		WithFilter(filter).
 		WithOutputFields("metadata").
 		WithAnnParam(annParam))
 	if err != nil {
@@ -125,5 +128,5 @@ func JsonField() {
 		fmt.Println("metadata", resultSet.GetColumn("metadata").FieldData().GetScalars())
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_json_collection"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

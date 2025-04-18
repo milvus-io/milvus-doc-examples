@@ -45,10 +45,10 @@ func ArrayField() {
 		WithNullable(true),
 	)
 
-	indexOpt1 := milvusclient.NewCreateIndexOption("my_array_collection", "tags", index.NewInvertedIndex())
-	indexOpt2 := milvusclient.NewCreateIndexOption("my_array_collection", "embedding", index.NewAutoIndex(entity.COSINE))
+	indexOpt1 := milvusclient.NewCreateIndexOption("my_collection", "tags", index.NewInvertedIndex())
+	indexOpt2 := milvusclient.NewCreateIndexOption("my_collection", "embedding", index.NewAutoIndex(entity.COSINE))
 
-	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("my_array_collection", schema).
+	err = client.CreateCollection(ctx, milvusclient.NewCreateCollectionOption("my_collection", schema).
 		WithIndexOptions(indexOpt1, indexOpt2))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -62,7 +62,7 @@ func ArrayField() {
 		[][]int64{{5, 4, 3}, {4, 5}, {9, 5}},
 		[]bool{true, true, true})
 
-	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_array_collection").
+	_, err = client.Insert(ctx, milvusclient.NewColumnBasedInsertOption("my_collection").
 		WithInt64Column("pk", []int64{1, 2, 3}).
 		WithFloatVectorColumn("embedding", 3, [][]float32{
 			{0.12, 0.34, 0.56},
@@ -74,21 +74,11 @@ func ArrayField() {
 		// handle err
 	}
 
-	loadTask, err := client.LoadCollection(ctx, milvusclient.NewLoadCollectionOption("my_array_collection"))
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle err
-	}
+	util.FlushLoadCollection(client, "my_collection")
 
-	// sync wait collection to be loaded
-	err = loadTask.Await(ctx)
-	if err != nil {
-		fmt.Println(err.Error())
-		// handle error
-	}
-
-	rs, err := client.Query(ctx, milvusclient.NewQueryOption("my_array_collection").
-		WithFilter("tags IS NOT NULL").
+	filter := "tags IS NOT NULL"
+	rs, err := client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter(filter).
 		WithOutputFields("tags", "ratings", "pk"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -99,18 +89,31 @@ func ArrayField() {
 	fmt.Println("tags", rs.GetColumn("tags").FieldData().GetScalars())
 	fmt.Println("ratings", rs.GetColumn("ratings").FieldData().GetScalars())
 
+	filter = "ratings[0] > 4"
+	rs, err = client.Query(ctx, milvusclient.NewQueryOption("my_collection").
+		WithFilter(filter).
+		WithOutputFields("tags", "ratings", "pk"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	fmt.Println("pk", rs.GetColumn("pk"))
+	fmt.Println("tags", rs.GetColumn("tags"))
+	fmt.Println("ratings", rs.GetColumn("ratings"))
+
 	queryVector := []float32{0.3, -0.6, 0.1}
+	filter = "tags[0] == \"pop\""
 
 	annParam := index.NewCustomAnnParam()
 	annParam.WithExtraParam("nprobe", 10)
 	resultSets, err := client.Search(ctx, milvusclient.NewSearchOption(
-		"my_array_collection", // collectionName
-		5,                     // limit
+		"my_collection", // collectionName
+		5,               // limit
 		[]entity.Vector{entity.FloatVector(queryVector)},
-	).WithConsistencyLevel(entity.ClStrong).
-		WithANNSField("embedding").
+	).WithANNSField("embedding").
+		WithFilter(filter).
 		WithOutputFields("tags", "ratings", "embedding").
-		WithFilter("tags[0] == \"pop\"").
 		WithAnnParam(annParam))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -122,8 +125,8 @@ func ArrayField() {
 		fmt.Println("Scores: ", resultSet.Scores)
 		fmt.Println("tags", resultSet.GetColumn("tags").FieldData().GetScalars())
 		fmt.Println("ratings", resultSet.GetColumn("ratings").FieldData().GetScalars())
-		fmt.Println("embedding", resultSet.GetColumn("embedding").FieldData().GetScalars())
+		fmt.Println("embedding", resultSet.GetColumn("embedding").FieldData().GetVectors())
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_array_collection"))
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }

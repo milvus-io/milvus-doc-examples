@@ -97,7 +97,7 @@ public class NumberField {
         QueryResp resp = client.query(QueryReq.builder()
                 .collectionName("my_scalar_collection")
                 .filter(filter)
-                .outputFields(Arrays.asList("age", "price"))
+                .outputFields(Arrays.asList("age", "price", "pk"))
                 .consistencyLevel(ConsistencyLevel.STRONG)
                 .build());
         System.out.println(resp.getQueryResults());

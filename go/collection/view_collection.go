@@ -38,7 +38,7 @@ func DescribeCollection() {
 	}
 	defer client.Close(ctx)
 
-	collectionName := "quick_setup"
+	collectionName := "my_collection"
 	collection, err := client.DescribeCollection(ctx, milvusclient.NewDescribeCollectionOption(collectionName))
 	if err != nil {
 		fmt.Println(err.Error())

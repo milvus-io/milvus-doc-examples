@@ -18,14 +18,14 @@ func ListPartitions() {
 	}
 	defer client.Close(ctx)
 
-	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("quick_setup", 5))
+	err = client.CreateCollection(ctx, milvusclient.SimpleCreateCollectionOptions("my_collection", 5))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 	fmt.Println("collection created")
 
-	partitionNames, err := client.ListPartitions(ctx, milvusclient.NewListPartitionOption("quick_setup"))
+	partitionNames, err := client.ListPartitions(ctx, milvusclient.NewListPartitionOption("my_collection"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -44,13 +44,13 @@ func CreatePartition() {
 	}
 	defer client.Close(ctx)
 
-	err = client.CreatePartition(ctx, milvusclient.NewCreatePartitionOption("quick_setup", "partitionA"))
+	err = client.CreatePartition(ctx, milvusclient.NewCreatePartitionOption("my_collection", "partitionA"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	partitionNames, err := client.ListPartitions(ctx, milvusclient.NewListPartitionOption("quick_setup"))
+	partitionNames, err := client.ListPartitions(ctx, milvusclient.NewListPartitionOption("my_collection"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -69,7 +69,7 @@ func CheckPartition() {
 	}
 	defer client.Close(ctx)
 
-	result, err := client.HasPartition(ctx, milvusclient.NewHasPartitionOption("quick_setup", "partitionA"))
+	result, err := client.HasPartition(ctx, milvusclient.NewHasPartitionOption("my_collection", "partitionA"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -88,7 +88,7 @@ func LoadPartition() {
 	}
 	defer client.Close(ctx)
 
-	task, err := client.LoadPartitions(ctx, milvusclient.NewLoadPartitionsOption("quick_setup", "partitionA"))
+	task, err := client.LoadPartitions(ctx, milvusclient.NewLoadPartitionsOption("my_collection", "partitionA"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -100,6 +100,13 @@ func LoadPartition() {
 		fmt.Println(err.Error())
 		// handle error
 	}
+
+	state, err := client.GetLoadState(ctx, milvusclient.NewGetLoadStateOption("my_collection", "partitionA"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println(state)
 }
 
 func ReleasePartition() {
@@ -112,7 +119,7 @@ func ReleasePartition() {
 	}
 	defer client.Close(ctx)
 
-	err = client.ReleasePartitions(ctx, milvusclient.NewReleasePartitionsOptions("quick_setup", "partitionA"))
+	err = client.ReleasePartitions(ctx, milvusclient.NewReleasePartitionsOptions("my_collection", "partitionA"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
@@ -129,11 +136,24 @@ func DropPartition() {
 	}
 	defer client.Close(ctx)
 
-	err = client.DropPartition(ctx, milvusclient.NewDropPartitionOption("quick_setup", "partitionA"))
+	err = client.ReleasePartitions(ctx, milvusclient.NewReleasePartitionsOptions("my_collection", "partitionA"))
 	if err != nil {
 		fmt.Println(err.Error())
 		// handle error
 	}
 
-	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("quick_setup"))
+	err = client.DropPartition(ctx, milvusclient.NewDropPartitionOption("my_collection", "partitionA"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	partitionNames, err := client.ListPartitions(ctx, milvusclient.NewListPartitionOption("my_collection"))
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+	fmt.Println(partitionNames)
+
+	client.DropCollection(ctx, milvusclient.NewDropCollectionOption("my_collection"))
 }
