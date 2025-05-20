@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/milvus-go-examples/util"
@@ -114,6 +115,32 @@ func AnalyzerBuiltin() {
 	analyzerParams = map[string]any{"type": "chinese"}
 	fmt.Println(analyzerParams)
 
+	analyzerParams = map[string]any{"type": "standard", "stop_words": []string{"a", "an", "for"}}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	client, err := util.GetClient(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	bs, _ := json.Marshal(analyzerParams)
+	texts := []string{"An efficient system relies on a robust analyzer to correctly process text for various applications."}
+	option := milvusclient.NewRunAnalyzerOption(texts).
+		WithAnalyzerParams(string(bs))
+
+	result, err := client.RunAnalyzer(ctx, option)
+	if err != nil {
+		fmt.Println(err.Error())
+		// handle error
+	}
+
+	for _, res := range result {
+		for _, token := range res.Tokens {
+			fmt.Println(token)
+		}
+	}
 }
 
 func Tokenizer() {
@@ -139,6 +166,9 @@ func Tokenizer() {
 	fmt.Println(analyzerParams)
 
 	analyzerParams = map[string]any{"type": "jieba", "dict": []any{"结巴分词器"}, "mode": "exact", "hmm": false}
+	fmt.Println(analyzerParams)
+
+	analyzerParams = map[string]any{"tokenizer": map[string]any{"type": "lindera", "dict_kind": "ipadic"}}
 	fmt.Println(analyzerParams)
 }
 
