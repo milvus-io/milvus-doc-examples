@@ -76,6 +76,7 @@ func userGuideSchema() {
 	schema.Filter()
 	schema.AlterField()
 	schema.SchemaDesign()
+	schema.MultiAnalyzer()
 }
 
 func userGuideDml() {
